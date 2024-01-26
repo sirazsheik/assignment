@@ -16,6 +16,10 @@ export class Book {
     getBookInfo() {
         return `Title: ${this.title}\nAuthor: ${this.author}\nISBN: ${this.isbn}`;
     }
+
+    putId (id) {
+        this.id = id;
+    }
 }
 
 export class Library {
@@ -53,7 +57,8 @@ export class Library {
         if (book instanceof Book || book instanceof EBook) {
             const {title, author, isbn, file_format} = book;
             await addBook(title, author, isbn, file_format);
-            book.id = 
+            book.id = this.autoIntrementId + 1;
+            this.autoIntrementId += 1; 
             this.books.push(book);
         } else {
             throw new Error("Invalid book object");
@@ -68,7 +73,6 @@ export class Library {
         if (!this.initialized) {
             throw InitializationError("Library failed to initialize");
         }
-        console.log(this.books);
 
         this.books.forEach(book => {
             console.log(book.getBookInfo());    
