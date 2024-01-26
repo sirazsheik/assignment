@@ -1,5 +1,5 @@
 import express from 'express';
-import { Library } from './model';
+import { Library } from './model.js';
 
 const app = express();
 const port = 3000;
@@ -44,7 +44,7 @@ app.get('/list', (req, res) => {
 });
 
 
-app.delete('/book/:id', (req, res) => {
+app.delete('/delete/:id', (req, res) => {
     const id = req.params.id;
     if (!id) {
         return res.status(400).json({msg: "id is must to delete a book"});

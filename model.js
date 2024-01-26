@@ -20,6 +20,7 @@ export class Book {
 
 export class Library {
     initialized = false;
+    autoIntrementId = 0;
 
     constructor() {
         this.init();  
@@ -52,6 +53,7 @@ export class Library {
         if (book instanceof Book || book instanceof EBook) {
             const {title, author, isbn, file_format} = book;
             await addBook(title, author, isbn, file_format);
+            book.id = 
             this.books.push(book);
         } else {
             throw new Error("Invalid book object");
