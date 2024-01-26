@@ -1,73 +1,60 @@
-const express = require('express');
-const { Book, EBook, Library } = require('./model');
+import express from 'express';
+import { Library } from './model';
 
 const app = express();
 const port = 3000;
 app.use(express.json());
 
+const library = new Library();
+
 try {
-    const book1 = new Book("Python Basics", "John Doe", "123456789");
-    const ebook1 = new EBook("Web Development", "Jane Smith", "987654321", "PDF");
-    
-    const library = new Library();
-    await library.init();
-    await library.addBookToLibrary(book1);
-    await library.addBookToLibrary(ebook1);
-
-    console.log("\nAll Books in Library:");
-    library.displayAllBooks();
-  
-    try {
-        const invalidBook = { title: "Invalid Book", author: "Unknown" };
-        await library.addBook(invalidBook); 
-    } catch (error) {
-        console.error(`Error while adding book: ${error.message}`);
-    }
-
-    const searchResult = library.searchBookByTitle("Web Development");
-    if (searchResult) {
-        console.log("\nSearch Result:");
-        searchResult.displayInfo();
-    } else {
-        console.log("\nBook not found.");
-    }
-
-} catch (error) {
-    console.error(`Error: ${error.message}`);
+    library.init();
+} catch (e) {
+    console.log(e);
 }
 
 
-app.post('/books', (req, res) => {
+app.post('/add', (req, res) => {
+    if (!library.isInitalized()) {
+        return res.status(500).json({error: 'Library is under matanience'});
+    }
+
     const { title, author, isbn, file_format } = req.body;
-    db.run('INSERT INTO books (title, author, isbn, file_format) VALUES (?, ?, ?, ?)',
-        [title, author, isbn, file_format],
-        (err) => {
-            if (err) {
-                return res.status(500).json({ error: err.message });
-            }
-            res.json({ message: 'Book added successfully' });
-        });
+    if (title === undefined || author === undefined || isbn === undefined) {
+        return res.status(400).json({error: "Invalid data"});
+    } 
+
+    const book = library.constructABook(req.body);
+    try {
+        library.addBookToLibrary(book);
+        return res.status(200).json({msg: "succesfully added book"});
+    } catch (e) {
+        return res.status(500).json({error: e});
+    }
 });
 
 
-app.get('/books', (req, res) => {
-    db.all('SELECT * FROM books', (err, rows) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        res.json(rows);
-    });
+app.get('/list', (req, res) => {
+    try {
+        const books = library.getAllBooks();
+        return res.status(200).json(books);
+    } catch (e) {
+        return res.status(500).json({error: "Unable to fetch the data"});
+    }
 });
 
 
-app.delete('/books/:id', (req, res) => {
+app.delete('/book/:id', (req, res) => {
     const id = req.params.id;
-    db.run('DELETE FROM books WHERE id = ?', [id], (err) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        res.json({ message: 'Book deleted successfully' });
-    });
+    if (!id) {
+        return res.status(400).json({msg: "id is must to delete a book"});
+    }
+    try {
+        library.deleteBook(id);
+        return res.status(200).json({msg: "delete from  the library"})
+    } catch (e) {
+        return res.status(500).json({error: "Unable to delete"});
+    }
 });
 
 

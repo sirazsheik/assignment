@@ -1,10 +1,10 @@
-const sqlite3 = require('sqlite3');
+import sqlite3  from 'sqlite3';
 const db = new sqlite3.Database('library.db');
 
 
 
-export const initTable = async () => new Promise((resolve, reject) => { db.run(`
-    CREATE TABLE IF NOT EXISTS books (
+export const initTable = async () => new Promise((resolve, reject) => { 
+    db.run(`CREATE TABLE IF NOT EXISTS books (
         id INTEGER PRIMARY KEY,
         title TEXT,
         author TEXT,
@@ -41,3 +41,12 @@ export const addBook = async (title, author, isbn, file_format) =>  {
         }
     )
 }
+
+export const deleteBookFromDb =  async (id) => new Promise((resolve, reject) => {
+        db.run('DELETE FROM books WHERE id = ?', [id], (err) => {
+        if (err) {
+            return reject({ error: err.message });
+        }
+        resolve({ message: 'Book deleted successfully' });
+    });
+});

@@ -1,4 +1,4 @@
-import { addBook, getAllBooks, initTable } from "./db";
+import { addBook, deleteBookFromDb, getAllBooks, initTable } from "./db.js";
 
 export class InitializationError extends Error {
     constructor(message) {
@@ -24,11 +24,20 @@ export class Library {
     constructor() {
         this.init();  
     }
+
+    constructABook(book) {
+        if (book.fileFormat) {
+            return new EBook(book.title, book.author, book.isbn, book.fileFormat);
+        } else {
+            return new Book(book.title, book.author, book.isbn);
+        }
+    }
     
     async init () {
         try{
-            this.books = await getAllBooks();
             await initTable()
+            const dbBooks = await getAllBooks();
+            this.books = dbBooks.map((book) => this.constructABook(book));
         } catch (e) {
             console.log(e); 
         }
@@ -49,14 +58,23 @@ export class Library {
         }
     }
 
+    isInitalized() {
+        return this.initialized;
+    }
+
     displayAllBooks() {
         if (!this.initialized) {
             throw InitializationError("Library failed to initialize");
         }
+        console.log(this.books);
 
         this.books.forEach(book => {
-            print(book.getBookInfo());    
+            console.log(book.getBookInfo());    
         });
+    }
+
+    getAllBooks() {
+        return this.books;
     }
 
     searchBooksByTitle(title) {
@@ -64,11 +82,20 @@ export class Library {
             throw InitializationError("Library failed to initialize");
         }
 
-        return this.books.reduce((acc, book) => {
-            if (book.includes(title)) {
-                acc.push(book);
+        return this.books.reduce((filteredBooks, book) => {
+            if (book.title.includes(title)) {
+                filteredBooks.push(book);
             }
-        });
+            return filteredBooks;
+        }, []);
+    }
+
+    async deleteBook(id) {
+        try {
+            await deleteBookFromDb(id);            
+        } catch (e) {
+           throw new Error({message: "Unable to delete"});
+        }
     }
 }
 
