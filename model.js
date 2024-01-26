@@ -93,6 +93,7 @@ export class Library {
     async deleteBook(id) {
         try {
             await deleteBookFromDb(id);            
+            this.books = this.books.filter((book) => book.id != id);
         } catch (e) {
            throw new Error({message: "Unable to delete"});
         }
