@@ -1,22 +1,24 @@
-import { addBook, getAllBooks } from "./db";
+import { addBook, getAllBooks, initTable } from "./db";
 
-class InitializationError extends Error {
-    
+export class InitializationError extends Error {
+    constructor(message) {
+        super(message);
+    }
 }
 
-class Book {
+export class Book {
     constructor(title, author, isbn) {
         this.title = title;
         this.author = author;
         this.isbn = isbn;
     }
 
-    displayInfo() {
-        console.log(`Title: ${this.title}\nAuthor: ${this.author}\nISBN: ${this.isbn}`);
+    getBookInfo() {
+        return `Title: ${this.title}\nAuthor: ${this.author}\nISBN: ${this.isbn}`;
     }
 }
 
-class Library {
+export class Library {
     initialized = false;
 
     constructor() {
@@ -26,42 +28,57 @@ class Library {
     async init () {
         try{
             this.books = await getAllBooks();
+            await initTable()
         } catch (e) {
             console.log(e); 
         }
-        this.initialized = true 
+        this.initialized = true ;
     }
     
-    addBookToLibrary(book) {
+    async addBookToLibrary(book) {
+        if (!this.initialized) {
+            throw InitializationError("Library failed to initialize");
+        }
+
         if (book instanceof Book || book instanceof EBook) {
+            const {title, author, isbn, file_format} = book;
+            await addBook(title, author, isbn, file_format);
             this.books.push(book);
-        const {title, author, isbn, file_format} = book;
-        addBook(title, author, isbn, file_format);
         } else {
             throw new Error("Invalid book object");
         }
     }
 
     displayAllBooks() {
+        if (!this.initialized) {
+            throw InitializationError("Library failed to initialize");
+        }
+
         this.books.forEach(book => {
-            book.displayInfo();
-            
+            print(book.getBookInfo());    
         });
     }
 
-    searchBookByTitle(title) {
-        return this.books.find(book => book.title === title) || null;
+    searchBooksByTitle(title) {
+        if (!this.initialized) {
+            throw InitializationError("Library failed to initialize");
+        }
+
+        return this.books.reduce((acc, book) => {
+            if (book.includes(title)) {
+                acc.push(book);
+            }
+        });
     }
 }
 
-class EBook extends Book {
+export class EBook extends Book {
     constructor(title, author, isbn, fileFormat) {
         super(title, author, isbn);
         this.fileFormat = fileFormat;
     }
 
-    displayInfo() {
-        super.displayInfo();
-        console.log(`File Format: ${this.fileFormat}`);
+    getBookInfo() {
+        return `${super.getBookInfo()} File Format: ${this.fileFormat}`;
     }
 }

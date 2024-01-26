@@ -3,7 +3,7 @@ const db = new sqlite3.Database('library.db');
 
 
 
-const init = () => db.run(`
+export const initTable = async () => new Promise((resolve, reject) => { db.run(`
     CREATE TABLE IF NOT EXISTS books (
         id INTEGER PRIMARY KEY,
         title TEXT,
@@ -11,9 +11,15 @@ const init = () => db.run(`
         isbn TEXT,
         file_format TEXT
     )
-`);
+    `, (err) => {
+        if (err) {
+            reject({ error: err.message });
+        }
+        resolve("Table created");
+    });
+})
 
-export const getAllBooks =  () => new Promise((resolve, reject) => {
+export const getAllBooks =  async () => new Promise((resolve, reject) => {
         db.all('SELECT * FROM books', (err, rows) => {
         if (err) {
             reject({ error: err.message });
@@ -22,7 +28,7 @@ export const getAllBooks =  () => new Promise((resolve, reject) => {
     });
 });
 
-export const addBook = (title, author, isbn, file_format) =>  {  
+export const addBook = async (title, author, isbn, file_format) =>  {  
     new Promise((resolve, reject) => {
             db.run('INSERT INTO books (title, author, isbn, file_format) VALUES (?, ?, ?, ?)',
             [title, author, isbn, file_format],
